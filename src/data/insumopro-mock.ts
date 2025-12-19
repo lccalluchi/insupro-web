@@ -1,4 +1,12 @@
 // Tipos
+export interface Sucursal {
+  id: number;
+  nombre: string;
+  direccion: string;
+  ciudad: string;
+  telefono: string;
+}
+
 export interface Usuario {
   id: number;
   nombre: string;
@@ -7,6 +15,7 @@ export interface Usuario {
   password: string;
   rol: 'Gerente' | 'Chef' | 'Almacenero';
   iniciales: string;
+  sucursalId: number | null; // null = acceso a todas (Gerentes)
 }
 
 export interface Insumo {
@@ -53,6 +62,7 @@ export interface Reporte {
   id: number;
   fecha: string;
   usuarioId: number;
+  sucursalId: number; // Sucursal que generó el reporte
   insumos: {
     insumoId: number;
     stockSistema: number;
@@ -60,6 +70,31 @@ export interface Reporte {
     merma: number;
   }[];
 }
+
+// Sucursales Mock
+export const sucursalesMock: Sucursal[] = [
+  {
+    id: 1,
+    nombre: 'Sucursal Centro',
+    direccion: 'Av. Arequipa 1234',
+    ciudad: 'Lima',
+    telefono: '01-234-5678',
+  },
+  {
+    id: 2,
+    nombre: 'Sucursal San Isidro',
+    direccion: 'Av. Javier Prado 5678',
+    ciudad: 'Lima',
+    telefono: '01-345-6789',
+  },
+  {
+    id: 3,
+    nombre: 'Sucursal Miraflores',
+    direccion: 'Av. Larco 9012',
+    ciudad: 'Lima',
+    telefono: '01-456-7890',
+  },
+];
 
 // Usuarios Mock
 export const usuariosMock: Usuario[] = [
@@ -71,6 +106,7 @@ export const usuariosMock: Usuario[] = [
     password: '123456',
     rol: 'Gerente',
     iniciales: 'CM',
+    sucursalId: null, // Gerente ve todas las sucursales
   },
   {
     id: 2,
@@ -80,6 +116,7 @@ export const usuariosMock: Usuario[] = [
     password: '123456',
     rol: 'Chef',
     iniciales: 'ML',
+    sucursalId: 1, // Asignada a Sucursal Centro
   },
   {
     id: 3,
@@ -89,6 +126,27 @@ export const usuariosMock: Usuario[] = [
     password: '123456',
     rol: 'Almacenero',
     iniciales: 'JP',
+    sucursalId: 1, // Asignado a Sucursal Centro
+  },
+  {
+    id: 4,
+    nombre: 'Ana',
+    apellido: 'García',
+    email: 'ana@insumopro.com',
+    password: '123456',
+    rol: 'Chef',
+    iniciales: 'AG',
+    sucursalId: 2, // Asignada a Sucursal San Isidro
+  },
+  {
+    id: 5,
+    nombre: 'Pedro',
+    apellido: 'Rodríguez',
+    email: 'pedro@insumopro.com',
+    password: '123456',
+    rol: 'Almacenero',
+    iniciales: 'PR',
+    sucursalId: 3, // Asignado a Sucursal Miraflores
   },
 ];
 
@@ -261,7 +319,8 @@ export const recetasMock: Receta[] = [
   },
 ];
 
-// Datos de conteo físico (para calcular mermas y mostrar en alertas)
+// DEPRECATED: Se mantiene solo para compatibilidad temporal
+// El conteo físico ahora se guarda directamente en los reportes
 export const conteoFisicoMock: Record<number, number> = {
   1: 4.2,   // Lomo Fino: Sistema 5.0, Físico 4.2 = Merma 0.8kg (800g)
   3: 8.5,   // Pescado Corvina: Sistema 9.0, Físico 8.5 = Merma 0.5kg (500g)
@@ -270,7 +329,8 @@ export const conteoFisicoMock: Record<number, number> = {
   15: 6.0,  // Queso Fresco: Sistema 6.0, Físico 6.0 = Sin merma (pero por vencer)
 };
 
-// Función para calcular mermas
+// DEPRECATED: Se mantiene solo para compatibilidad temporal
+// Las mermas ahora se obtienen del último reporte guardado
 export function calcularMermas() {
   return Object.entries(conteoFisicoMock).map(([insumoId, conteoFisico]) => {
     const insumo = insumosMock.find(i => i.id === parseInt(insumoId));
@@ -286,6 +346,85 @@ export function calcularMermas() {
       valorMerma: merma * insumo.costoUnitario,
     };
   }).filter(Boolean);
+}
+
+// Función para filtrar reportes por sucursal
+export function getReportesPorSucursal(sucursalId: number | null) {
+  if (sucursalId === null) {
+    return reportesMock; // null = todas las sucursales (para Gerentes)
+  }
+  return reportesMock.filter(r => r.sucursalId === sucursalId);
+}
+
+// Función para obtener el último reporte (reporte del día actual) por sucursal
+export function getReporteActual(sucursalId: number | null = null) {
+  const reportesFiltrados = getReportesPorSucursal(sucursalId);
+
+  // Obtener el reporte más reciente (primer elemento)
+  return reportesFiltrados[0];
+}
+
+// Función para obtener mermas del reporte actual por sucursal
+export function getMermasReporteActual(sucursalId: number | null = null) {
+  const reportesFiltrados = getReportesPorSucursal(sucursalId);
+
+  // Si sucursalId es null (Gerente ve todas), consolidar todas las mermas del día más reciente
+  if (sucursalId === null && reportesFiltrados.length > 0) {
+    const fechaMasReciente = reportesFiltrados[0].fecha;
+    const reportesDelDia = reportesFiltrados.filter(r => r.fecha === fechaMasReciente);
+
+    // Consolidar mermas de todos los reportes del día
+    const mermasConsolidadas = new Map<number, any>();
+
+    reportesDelDia.forEach(reporte => {
+      reporte.insumos.forEach(item => {
+        if (item.merma > 0) {
+          const insumo = insumosMock.find(i => i.id === item.insumoId);
+          if (!insumo) return;
+
+          if (mermasConsolidadas.has(item.insumoId)) {
+            // Sumar merma si ya existe
+            const existing = mermasConsolidadas.get(item.insumoId);
+            existing.merma += item.merma;
+            existing.valorMerma = existing.merma * insumo.costoUnitario;
+          } else {
+            // Agregar nueva merma
+            mermasConsolidadas.set(item.insumoId, {
+              insumoId: item.insumoId,
+              nombre: insumo.nombre,
+              stockSistema: item.stockSistema,
+              conteoFisico: item.conteoFisico,
+              merma: item.merma,
+              valorMerma: item.merma * insumo.costoUnitario,
+            });
+          }
+        }
+      });
+    });
+
+    return Array.from(mermasConsolidadas.values());
+  }
+
+  // Para una sucursal específica
+  const reporteActual = reportesFiltrados[0];
+  if (!reporteActual) return [];
+
+  return reporteActual.insumos
+    .filter(item => item.merma > 0)
+    .map(item => {
+      const insumo = insumosMock.find(i => i.id === item.insumoId);
+      if (!insumo) return null;
+
+      return {
+        insumoId: item.insumoId,
+        nombre: insumo.nombre,
+        stockSistema: item.stockSistema,
+        conteoFisico: item.conteoFisico,
+        merma: item.merma,
+        valorMerma: item.merma * insumo.costoUnitario,
+      };
+    })
+    .filter(Boolean);
 }
 
 // Función para verificar stock bajo
@@ -349,12 +488,13 @@ export const alertasMock: Alerta[] = [
   },
 ];
 
-// Reportes Mock - Historial de los últimos 7 días
+// Reportes Mock - Historial de los últimos 7 días (de todas las sucursales)
 export const reportesMock: Reporte[] = [
   {
     id: 1,
     fecha: '2025-12-18', // Hoy
     usuarioId: 3,
+    sucursalId: 1, // Sucursal Centro
     insumos: [
       { insumoId: 1, stockSistema: 5.0, conteoFisico: 4.2, merma: 0.8 },
       { insumoId: 3, stockSistema: 9.0, conteoFisico: 8.5, merma: 0.5 },
@@ -364,8 +504,30 @@ export const reportesMock: Reporte[] = [
   },
   {
     id: 2,
+    fecha: '2025-12-18', // Hoy - Sucursal San Isidro
+    usuarioId: 4,
+    sucursalId: 2,
+    insumos: [
+      { insumoId: 2, stockSistema: 12.0, conteoFisico: 11.7, merma: 0.3 },
+      { insumoId: 5, stockSistema: 6.0, conteoFisico: 5.8, merma: 0.2 },
+      { insumoId: 11, stockSistema: 25.0, conteoFisico: 24.6, merma: 0.4 },
+    ],
+  },
+  {
+    id: 3,
+    fecha: '2025-12-18', // Hoy - Sucursal Miraflores
+    usuarioId: 5,
+    sucursalId: 3,
+    insumos: [
+      { insumoId: 1, stockSistema: 5.0, conteoFisico: 4.8, merma: 0.2 },
+      { insumoId: 3, stockSistema: 9.0, conteoFisico: 8.7, merma: 0.3 },
+    ],
+  },
+  {
+    id: 4,
     fecha: '2025-12-17',
     usuarioId: 3,
+    sucursalId: 1,
     insumos: [
       { insumoId: 1, stockSistema: 6.0, conteoFisico: 5.5, merma: 0.5 },
       { insumoId: 2, stockSistema: 12.0, conteoFisico: 11.8, merma: 0.2 },
@@ -373,9 +535,20 @@ export const reportesMock: Reporte[] = [
     ],
   },
   {
-    id: 3,
+    id: 5,
+    fecha: '2025-12-17',
+    usuarioId: 4,
+    sucursalId: 2,
+    insumos: [
+      { insumoId: 1, stockSistema: 6.0, conteoFisico: 5.7, merma: 0.3 },
+      { insumoId: 10, stockSistema: 3.5, conteoFisico: 3.3, merma: 0.2 },
+    ],
+  },
+  {
+    id: 6,
     fecha: '2025-12-16',
     usuarioId: 2,
+    sucursalId: 1,
     insumos: [
       { insumoId: 1, stockSistema: 7.0, conteoFisico: 6.2, merma: 0.8 },
       { insumoId: 3, stockSistema: 10.0, conteoFisico: 9.7, merma: 0.3 },
@@ -383,18 +556,20 @@ export const reportesMock: Reporte[] = [
     ],
   },
   {
-    id: 4,
+    id: 7,
     fecha: '2025-12-15',
     usuarioId: 3,
+    sucursalId: 1,
     insumos: [
       { insumoId: 2, stockSistema: 13.0, conteoFisico: 12.5, merma: 0.5 },
       { insumoId: 11, stockSistema: 28.0, conteoFisico: 27.8, merma: 0.2 },
     ],
   },
   {
-    id: 5,
+    id: 8,
     fecha: '2025-12-14',
     usuarioId: 3,
+    sucursalId: 1,
     insumos: [
       { insumoId: 1, stockSistema: 8.0, conteoFisico: 7.1, merma: 0.9 },
       { insumoId: 3, stockSistema: 11.0, conteoFisico: 10.3, merma: 0.7 },
@@ -402,18 +577,20 @@ export const reportesMock: Reporte[] = [
     ],
   },
   {
-    id: 6,
+    id: 9,
     fecha: '2025-12-13',
     usuarioId: 2,
+    sucursalId: 1,
     insumos: [
       { insumoId: 1, stockSistema: 9.0, conteoFisico: 9.0, merma: 0 },
       { insumoId: 11, stockSistema: 30.0, conteoFisico: 29.5, merma: 0.5 },
     ],
   },
   {
-    id: 7,
+    id: 10,
     fecha: '2025-12-12',
     usuarioId: 3,
+    sucursalId: 1,
     insumos: [
       { insumoId: 1, stockSistema: 10.0, conteoFisico: 9.3, merma: 0.7 },
       { insumoId: 2, stockSistema: 14.0, conteoFisico: 13.6, merma: 0.4 },
@@ -422,14 +599,17 @@ export const reportesMock: Reporte[] = [
   },
 ];
 
-// Función para obtener reportes recientes
-export function getReportesRecientes(limit: number = 7) {
-  return reportesMock.slice(0, limit);
+// Función para obtener reportes recientes por sucursal
+export function getReportesRecientes(limit: number = 7, sucursalId: number | null = null) {
+  const reportesFiltrados = getReportesPorSucursal(sucursalId);
+  return reportesFiltrados.slice(0, limit);
 }
 
-// Función para calcular tendencias de mermas
-export function calcularTendenciasMermas(insumoId: number) {
-  const reportesInsumo = reportesMock
+// Función para calcular tendencias de mermas por sucursal
+export function calcularTendenciasMermas(insumoId: number, sucursalId: number | null = null) {
+  const reportesFiltrados = getReportesPorSucursal(sucursalId);
+
+  const reportesInsumo = reportesFiltrados
     .map(reporte => ({
       fecha: reporte.fecha,
       merma: reporte.insumos.find(i => i.insumoId === insumoId)?.merma || 0
@@ -448,9 +628,9 @@ export function calcularTendenciasMermas(insumoId: number) {
   };
 }
 
-// Función para obtener resumen semanal
-export function getResumenSemanal() {
-  const ultimos7Dias = reportesMock.slice(0, 7);
+// Función para obtener resumen semanal por sucursal
+export function getResumenSemanal(sucursalId: number | null = null) {
+  const ultimos7Dias = getReportesRecientes(7, sucursalId);
 
   const totalMermas = ultimos7Dias.reduce((acc, reporte) => {
     const mermaReporte = reporte.insumos.reduce((sum, i) => sum + i.merma, 0);
@@ -480,7 +660,7 @@ export function getResumenSemanal() {
   return {
     diasReportados: ultimos7Dias.length,
     totalMermas,
-    promedioMermasDiarias: totalMermas / ultimos7Dias.length,
+    promedioMermasDiarias: ultimos7Dias.length > 0 ? totalMermas / ultimos7Dias.length : 0,
     top3Productos
   };
 }

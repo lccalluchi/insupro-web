@@ -10,8 +10,9 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { getResumenSemanal, reportesMock, insumosMock } from '../../data/insumopro-mock';
+import { getResumenSemanal, getReportesRecientes, insumosMock } from '../../data/insumopro-mock';
 import { formatGrams } from '../../lib/format-utils';
+import { useSucursal } from '../../context/SucursalContext';
 
 ChartJS.register(
   CategoryScale,
@@ -25,10 +26,11 @@ ChartJS.register(
 );
 
 export function TendenciasMermas() {
-  const resumen = getResumenSemanal();
+  const { sucursalSeleccionada } = useSucursal();
+  const resumen = getResumenSemanal(sucursalSeleccionada);
 
   // Preparar datos para el gráfico de tendencias
-  const ultimos7Reportes = reportesMock.slice(0, 7).reverse();
+  const ultimos7Reportes = getReportesRecientes(7, sucursalSeleccionada).reverse();
   const labels = ultimos7Reportes.map(r => {
     const fecha = new Date(r.fecha);
     return fecha.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });

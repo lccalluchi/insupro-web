@@ -2,6 +2,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { InsumoProSidebar } from '../../components/partials/insumopro-sidebar';
 import { InsumoProHeader } from '../../components/partials/insumopro-header';
 import { InsumoProProtectedRoute } from './protected-route';
+import { SucursalProvider } from '../../context/SucursalContext';
+import { useInsumoProAuth } from '../../context/insumopro-auth-context';
 
 const pageTitles: Record<string, string> = {
   '/insumopro': 'Dashboard',
@@ -12,18 +14,21 @@ const pageTitles: Record<string, string> = {
 export default function InsumoProLayout() {
   const location = useLocation();
   const title = pageTitles[location.pathname] || 'Dashboard';
+  const { usuario } = useInsumoProAuth();
 
   return (
     <InsumoProProtectedRoute>
-      <div className="flex h-screen overflow-hidden bg-gray-50">
-        <InsumoProSidebar />
-        <div className="flex-1 flex flex-col h-screen overflow-hidden">
-          <InsumoProHeader title={title} />
-          <main className="flex-1 overflow-auto p-8">
-            <Outlet />
-          </main>
+      <SucursalProvider usuarioSucursalId={usuario?.sucursalId || null}>
+        <div className="flex h-screen overflow-hidden bg-gray-50">
+          <InsumoProSidebar />
+          <div className="flex-1 flex flex-col h-screen overflow-hidden">
+            <InsumoProHeader title={title} />
+            <main className="flex-1 overflow-auto p-8">
+              <Outlet />
+            </main>
+          </div>
         </div>
-      </div>
+      </SucursalProvider>
     </InsumoProProtectedRoute>
   );
 }

@@ -9,21 +9,26 @@ import {
   insumosMock,
   alertasMock,
   recetasMock,
-  calcularMermas,
-  conteoFisicoMock
+  getReporteActual,
+  getMermasReporteActual
 } from '../../data/insumopro-mock';
 import { formatCurrency, formatGrams, formatThousands } from '../../lib/format-utils';
+import { useSucursal } from '../../context/SucursalContext';
 
 export default function InsumoproDashboard() {
+  const { sucursalSeleccionada } = useSucursal();
   const totalInsumos = insumosMock.length;
-  const mermasCalculadas = calcularMermas();
-  const mermasDetectadas = mermasCalculadas.length;
+
+  // Obtener el reporte actual y sus mermas filtrado por sucursal
+  const reporteActual = getReporteActual(sucursalSeleccionada);
+  const mermasReporte = getMermasReporteActual(sucursalSeleccionada);
+  const mermasDetectadas = mermasReporte.length;
 
   const valorInventario = insumosMock.reduce((acc, insumo) => {
     return acc + (insumo.stockSistema * insumo.costoUnitario);
   }, 0);
 
-  const valorMermas = mermasCalculadas.reduce((acc: number, merma: any) => {
+  const valorMermas = mermasReporte.reduce((acc: number, merma: any) => {
     return acc + (merma?.valorMerma || 0);
   }, 0);
 
@@ -31,12 +36,13 @@ export default function InsumoproDashboard() {
 
   // Estado para el producto seleccionado (por defecto, la primera merma)
   const [selectedInsumoId, setSelectedInsumoId] = useState<number | null>(
-    mermasCalculadas.length > 0 && mermasCalculadas[0] ? (mermasCalculadas[0] as any).insumoId : null
+    mermasReporte.length > 0 && mermasReporte[0] ? (mermasReporte[0] as any).insumoId : null
   );
 
-  // Obtener datos del producto seleccionado
+  // Obtener datos del producto seleccionado del reporte actual
   const selectedInsumo = insumosMock.find(i => i.id === selectedInsumoId);
-  const selectedConteo = selectedInsumoId ? conteoFisicoMock[selectedInsumoId] : null;
+  const selectedItemReporte = reporteActual.insumos.find(i => i.insumoId === selectedInsumoId);
+  const selectedConteo = selectedItemReporte?.conteoFisico || null;
 
   // Manejar click en alerta (ahora todas son clickeables)
   const handleAlertClick = (insumoId?: number) => {
@@ -154,7 +160,7 @@ export default function InsumoproDashboard() {
               </tr>
             </thead>
             <tbody>
-              {mermasCalculadas
+              {mermasReporte
                 .sort((a: any, b: any) => b.valorMerma - a.valorMerma)
                 .map((merma: any, index: number) => (
                   <tr key={merma.insumoId} className="border-b border-gray-100 hover:bg-gray-50">
@@ -184,7 +190,7 @@ export default function InsumoproDashboard() {
                 </td>
                 <td className="py-3 px-4 text-right text-sm text-red-600">
                   {formatGrams(
-                    mermasCalculadas.reduce((acc: number, m: any) => acc + m.merma * 1000, 0)
+                    mermasReporte.reduce((acc: number, m: any) => acc + m.merma * 1000, 0)
                   )}
                 </td>
                 <td className="py-3 px-4 text-right text-lg text-red-600">

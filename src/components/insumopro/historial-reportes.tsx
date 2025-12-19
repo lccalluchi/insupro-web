@@ -1,9 +1,11 @@
 import { Calendar, TrendingDown, User } from 'lucide-react';
-import { reportesMock, usuariosMock, insumosMock } from '../../data/insumopro-mock';
+import { getReportesRecientes, usuariosMock, insumosMock } from '../../data/insumopro-mock';
 import { formatCurrency, formatGrams } from '../../lib/format-utils';
+import { useSucursal } from '../../context/SucursalContext';
 
 export function HistorialReportes() {
-  const reportesRecientes = reportesMock.slice(0, 5);
+  const { sucursalSeleccionada } = useSucursal();
+  const reportesRecientes = getReportesRecientes(5, sucursalSeleccionada);
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -85,9 +87,9 @@ export function HistorialReportes() {
         })}
       </div>
 
-      {reportesMock.length > 5 && (
+      {reportesRecientes.length >= 5 && (
         <button className="mt-4 w-full text-center text-sm text-green-600 hover:text-green-700 font-medium">
-          Ver todos los reportes ({reportesMock.length})
+          Ver todos los reportes
         </button>
       )}
     </div>
