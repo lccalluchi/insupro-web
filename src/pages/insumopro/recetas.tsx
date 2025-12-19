@@ -111,7 +111,7 @@ export default function InsumoproRecetas() {
                         </span>
                       </div>
                       <div>
-                        <span className="font-medium">{receta.ingredientes.length} ingredientes</span>
+                        <span className="font-medium text-foreground">{receta.ingredientes.length} ingredientes</span>
                       </div>
                     </div>
                   </div>

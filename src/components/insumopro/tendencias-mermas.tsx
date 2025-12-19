@@ -10,7 +10,7 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { getResumenSemanal, getReportesRecientes, insumosMock } from '../../data/insumopro-mock';
+import { getResumenSemanal, getReportesRecientes } from '../../data/insumopro-mock';
 import { formatGrams } from '../../lib/format-utils';
 import { useSucursal } from '../../context/SucursalContext';
 
