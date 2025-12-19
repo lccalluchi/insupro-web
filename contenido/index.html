@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsumoPro - Prototipo Funcional</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        
+        /* Estilos para ocultar/mostrar secciones */
+        .section-view { display: none; }
+        .section-view.active { display: block; }
+        
+        /* Estilo activo del menú */
+        .nav-item.active { background-color: #dcfce7; color: #166534; border-right: 4px solid #22c55e; }
+        .nav-item:hover { background-color: #f0fdf4; }
+    </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-white border-r border-gray-200 flex flex-col z-10">
+        <div class="h-16 flex items-center px-6 border-b border-gray-100">
+            <i class="fa-solid fa-cube text-green-500 text-2xl mr-3"></i>
+            <span class="font-bold text-xl text-gray-800">InsumoPro</span>
+        </div>
+        
+        <nav class="mt-6 flex-1">
+            <button onclick="navigate('dashboard')" id="btn-dashboard" class="nav-item active w-full flex items-center px-6 py-4 text-gray-600 transition-colors">
+                <i class="fa-solid fa-table-columns mr-3 w-5"></i> Dashboard
+            </button>
+            <button onclick="navigate('recetas')" id="btn-recetas" class="nav-item w-full flex items-center px-6 py-4 text-gray-600 transition-colors">
+                <i class="fa-solid fa-utensils mr-3 w-5"></i> Mis Recetas
+            </button>
+            <button onclick="navigate('reporte')" id="btn-reporte" class="nav-item w-full flex items-center px-6 py-4 text-gray-600 transition-colors">
+                <i class="fa-solid fa-clipboard-check mr-3 w-5"></i> Reporte Diario
+            </button>
+        </nav>
+
+        <div class="p-4 border-t border-gray-100">
+            <button class="flex items-center px-4 py-2 text-gray-500 hover:text-gray-800 w-full">
+                <i class="fa-solid fa-gear mr-3"></i> Configuración
+            </button>
+        </div>
+    </aside>
+
+    <div class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 flex-shrink-0">
+            <h2 id="page-title" class="text-xl font-bold text-gray-800">Dashboard</h2>
+            <div class="flex items-center gap-4">
+                <i class="fa-regular fa-bell text-gray-500 text-xl cursor-pointer"></i>
+                <div class="text-right hidden md:block">
+                    <p class="text-sm font-bold text-gray-800">Carlos Mendoza</p>
+                    <p class="text-xs text-gray-500">Gerente</p>
+                </div>
+                <div class="h-10 w-10 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">CM</div>
+            </div>
+        </header>
+
+        <main class="flex-1 overflow-auto bg-gray-50 p-8">
+
+            <div id="view-dashboard" class="section-view active">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between">
+                            <div><p class="text-xs font-bold text-gray-500 uppercase">Total Insumos</p><h3 class="text-3xl font-bold text-gray-800 mt-2">156</h3></div>
+                            <div class="p-3 bg-gray-100 rounded text-gray-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-box"></i></div>
+                        </div>
+                        <p class="text-xs text-green-500 mt-2 font-bold">↑ 12 vs. ayer</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 relative overflow-hidden">
+                        <div class="absolute left-0 top-0 h-full w-1 bg-red-500"></div>
+                        <div class="flex justify-between">
+                            <div><p class="text-xs font-bold text-gray-500 uppercase">Mermas Detectadas</p><h3 class="text-3xl font-bold text-red-600 mt-2">3</h3></div>
+                            <div class="p-3 bg-red-50 rounded text-red-500 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        </div>
+                        <p class="text-xs text-red-500 mt-2 font-bold">↓ 2 vs. ayer</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between">
+                            <div><p class="text-xs font-bold text-gray-500 uppercase">Valor Inventario</p><h3 class="text-3xl font-bold text-green-600 mt-2">24.5K</h3></div>
+                            <div class="p-3 bg-green-50 rounded text-green-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-chart-line"></i></div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between">
+                            <div><p class="text-xs font-bold text-gray-500 uppercase">Reportes</p><h3 class="text-3xl font-bold text-gray-800 mt-2">28</h3></div>
+                            <div class="p-3 bg-gray-100 rounded text-gray-600 h-10 w-10 flex items-center justify-center"><i class="fa-solid fa-clipboard"></i></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-bold text-lg text-gray-800">Lomo Fino <span class="text-sm font-normal text-gray-500 block">Comparación de inventario</span></h3>
+                            <span class="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-bold"><i class="fa-solid fa-circle-exclamation"></i> Merma Detectada</span>
+                        </div>
+                        <div class="relative h-64">
+                            <canvas id="mainChart"></canvas>
+                            <div class="absolute top-1/3 right-10 bg-red-600 text-white p-2 rounded shadow-lg text-center animate-bounce">
+                                <p class="text-xs font-bold">FALTANTE</p>
+                                <p class="text-lg font-bold">800g</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                        <h3 class="font-bold text-lg text-gray-800 mb-4">Alertas Recientes</h3>
+                        <div class="space-y-4">
+                            <div class="flex p-3 bg-red-50 rounded border border-red-100">
+                                <i class="fa-solid fa-triangle-exclamation text-red-500 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-800">Lomo Fino</h4>
+                                    <p class="text-xs text-red-600">Faltante detectado: 800g</p>
+                                </div>
+                                <span class="ml-auto text-xs text-gray-400">Hace 2h</span>
+                            </div>
+                            <div class="flex p-3 bg-yellow-50 rounded border border-yellow-100">
+                                <i class="fa-solid fa-arrow-trend-down text-yellow-500 mt-1 mr-3"></i>
+                                <div>
+                                    <h4 class="font-bold text-sm text-gray-800">Cebolla Roja</h4>
+                                    <p class="text-xs text-yellow-600">Stock bajo: 2kg restantes</p>
+                                </div>
+                                <span class="ml-auto text-xs text-gray-400">Hace 4h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-recetas" class="section-view">
+                <div class="flex justify-between mb-6">
+                    <div class="relative w-96">
+                        <input type="text" placeholder="Buscar recetas..." class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:border-green-500">
+                        <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400"></i>
+                    </div>
+                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-bold transition">
+                        + Nueva Receta
+                    </button>
+                </div>
+
+                <div class="grid gap-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-xl">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Lomo Saltado Clásico</h4>
+                                <p class="text-xs text-gray-500">Plato Principal</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fa-solid fa-pen mr-4 cursor-pointer hover:text-green-500"></i>
+                            <i class="fa-solid fa-chevron-down cursor-pointer"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
+                        <div class="flex items-center gap-4">
+                            <div class="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center text-green-600 text-xl">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-800">Ceviche Tradicional</h4>
+                                <p class="text-xs text-gray-500">Entrada</p>
+                            </div>
+                        </div>
+                        <div class="text-gray-400">
+                            <i class="fa-solid fa-pen mr-4 cursor-pointer hover:text-green-500"></i>
+                            <i class="fa-solid fa-chevron-down cursor-pointer"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-reporte" class="section-view">
+                <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 max-w-4xl mx-auto">
+                    <div class="text-center mb-8">
+                        <h3 class="text-2xl font-bold text-gray-800">Reporte Diario</h3>
+                        <p class="text-gray-500">Ingresa las cantidades físicas reales de cada insumo</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <div class="flex justify-between text-xs text-gray-500 mb-1">
+                            <span>Progreso</span>
+                            <span>0 de 5</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 10%"></div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div class="flex items-center gap-4">
+                                <div class="h-2 w-2 rounded-full bg-gray-400"></div>
+                                <div>
+                                    <p class="font-bold text-gray-800">Arroz</p>
+                                    <p class="text-xs text-gray-500">Sistema dice: 25 kg</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" placeholder="0.0" class="w-24 p-2 border rounded text-right focus:border-green-500 outline-none">
+                                <span class="text-gray-500 text-sm">kg</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div class="flex items-center gap-4">
+                                <div class="h-2 w-2 rounded-full bg-gray-400"></div>
+                                <div>
+                                    <p class="font-bold text-gray-800">Tomates</p>
+                                    <p class="text-xs text-gray-500">Sistema dice: 6 kg</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" placeholder="0.0" class="w-24 p-2 border rounded text-right focus:border-green-500 outline-none">
+                                <span class="text-gray-500 text-sm">kg</span>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
+                            <div class="flex items-center gap-4">
+                                <div class="h-2 w-2 rounded-full bg-gray-400"></div>
+                                <div>
+                                    <p class="font-bold text-gray-800">Lomo Fino</p>
+                                    <p class="text-xs text-gray-500">Sistema dice: 5 kg</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <input type="number" placeholder="0.0" class="w-24 p-2 border rounded text-right focus:border-green-500 outline-none">
+                                <span class="text-gray-500 text-sm">kg</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 flex justify-end">
+                        <button onclick="alert('¡Reporte guardado! Las mermas han sido calculadas.')" class="bg-gray-800 hover:bg-black text-white px-6 py-3 rounded-lg font-bold transition">
+                            <i class="fa-solid fa-check mr-2"></i> Finalizar Conteo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Lógica de Navegación
+        function navigate(viewId) {
+            // Ocultar todas las vistas
+            document.querySelectorAll('.section-view').forEach(el => el.classList.remove('active'));
+            // Desactivar todos los botones
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            
+            // Mostrar vista seleccionada
+            document.getElementById('view-' + viewId).classList.add('active');
+            document.getElementById('btn-' + viewId).classList.add('active');
+            
+            // Actualizar título
+            const titles = { 'dashboard': 'Dashboard', 'recetas': 'Mis Recetas', 'reporte': 'Reporte Diario' };
+            document.getElementById('page-title').innerText = titles[viewId];
+        }
+
+        // Configuración del Gráfico (Igual a tu imagen)
+        const ctx = document.getElementById('mainChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Stock Sistema', 'Conteo Físico'],
+                datasets: [{
+                    label: 'Cantidad (Kg)',
+                    data: [5.0, 4.2],
+                    backgroundColor: ['#9ca3af', '#3b82f6'],
+                    borderRadius: 8,
+                    barPercentage: 0.5
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, max: 6 }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
